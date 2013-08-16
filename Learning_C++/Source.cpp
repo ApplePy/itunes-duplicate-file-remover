@@ -37,16 +37,17 @@ int main()
 
 int theEngine(std::string searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const std::string &directoryInput)
 {
-	int exitCheck = 0;
 	unsigned short confirmDelete = 0;
 	int errorCode = 1;
 
-	initialSearch(searchTerm, fileStruct, fileHandle);
+	errorCode = initialSearch(searchTerm, fileStruct, fileHandle);
+	if (errorCode != 0)
+		return errorCode;
 
-	do //iterates through the folder(s) searching for search term.
+	while (errorCode==0) //iterates through the folder(s) searching for search term.
 	{
 		errorCode = fileDeletion(directoryInput, fileStruct, fileHandle, confirmDelete);
-	} while (exitCheck==0);
+	}
 
 	return errorCode;
 }
