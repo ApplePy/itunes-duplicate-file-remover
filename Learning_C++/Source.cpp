@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include "windows.h"
+#include <vector>
 
 //DECLARATIONS
 int theEngine(std::string searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const std::string &directoryInput);
@@ -27,29 +28,79 @@ int main()
 	searchTerm=directoryInput+maskInput;
 
 
-	WIN32_FIND_DATA fileStruct; //contains the file/directory currently under observation
-	HANDLE fileHandle;
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	int errorCode = theEngine(searchTerm,fileStruct,fileHandle,directoryInput);
+	/* Execution is as follows:
+	1) Grab the search term that the user wants
+	2) Search the given directory for folders; ask if they want to apply this search to all subdirectories or not
+	3) Index all the subdirectories
+	4) Search all the files in the current directory for deletion
+	5) Modify the search string to add in the next directory to search from index
+	6) Repeat steps 2-5 as necessary
+	7) Output error codes and exit program
+
+
+	Error Codes:
+	0: An intermediate step completed successfully
+	1: Unexpected error
+	2: No more files matching search term in current directory
+	3: No files found matching search term in current directory
+	4: not used
+	5: All searches completed, no more subdirectories to check; everything completed successfully
+	*/
+
+	std::vector<std::string> directories;
+	int errorCode = 0;
+
+	while (errorCode != 1 && errorCode != 5)
+	{
+		directoryCheck(directoryInput);// NOT FINISHED
+
+		WIN32_FIND_DATA fileStruct; //contains the file/directory currently under observation
+		HANDLE fileHandle;
+
+		errorCode = theEngine(searchTerm,fileStruct,fileHandle,directoryInput);
+		switch (errorCode)
+		{
+		case (1):
+			break;
+		default:
+			bool directoryCheckResult = checkIfMoreDirectoriesAreLeftToSearch(); //NOT FINISHED
+			if (directoryCheckResult==false)
+				errorCode=5;
+			else
+				modifySearchTermToSearchNextDirectory(); //NOT FINISHED
+			break;
+		}
+	}
 
 	return end_execution(errorCode);
 }
 
-int theEngine(std::string searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const std::string &directoryInput)
+
+void directoryCheck(const WIN32_FIND_DATA &fileStruct) //NOT FINISHED; NO DECLARATION ABOVE EITHER
+{
+	if (fileStruct.dwFileAttributes==FILE_ATTRIBUTE_DIRECTORY)
+		std::cout << "The folder " << fileStruct.cFileName << " was found inside the search directory.\n"
+		<< "Would you like to search this folder as well? 1 for yes, 2 for no, 3 for search all found folders.";
+}
+
+
+int theEngine(const std::string searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const std::string &directoryInput)
 {
 	unsigned short confirmDelete = 0;
-	int errorCode = 1;
+	int engineErrorCode = 0;
 
-	errorCode = initialSearch(searchTerm, fileStruct, fileHandle);
-	if (errorCode != 0)
-		return errorCode;
+	engineErrorCode = initialSearch(searchTerm, fileStruct, fileHandle);
+	if (engineErrorCode != 0)
+		return engineErrorCode;
 
-	while (errorCode==0) //iterates through the folder(s) searching for search term.
+	while (engineErrorCode==0) //iterates through the folder searching for search term.
 	{
-		errorCode = fileDeletion(directoryInput, fileStruct, fileHandle, confirmDelete);
+		engineErrorCode = fileDeletion(directoryInput, fileStruct, fileHandle, confirmDelete);
 	}
 
-	return errorCode;
+	return engineErrorCode;
 }
 
 int initialSearch(const std::string & searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle)
