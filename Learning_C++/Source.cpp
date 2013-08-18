@@ -4,9 +4,9 @@
 #include <vector>
 
 //DECLARATIONS
-int theEngine(std::string searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const std::string &directoryInput);
-int initialSearch(const std::string & searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle);
-int fileDeletion (const std::string & directoryInput, WIN32_FIND_DATA & fileStruct, const HANDLE & fileHandle, unsigned short & confirmDelete);
+int theEngine(const std::string searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const std::string &directoryInput, const bool directorySearchMode = false);
+int initialSearch(const std::string & searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const bool directorySearchMode = false);
+int fileDeletion (const std::string & directoryInput, WIN32_FIND_DATA & fileStruct, unsigned short & confirmDelete);
 int theNextFile (WIN32_FIND_DATA & fileStruct, const HANDLE & fileHandle);
 int end_execution(int code);
 
@@ -49,15 +49,14 @@ int main()
 	5: All searches completed, no more subdirectories to check; everything completed successfully
 	*/
 
-	std::vector<std::string> directories;
+	std::vector<std::string> directoriesToSearch;
 	int errorCode = 0;
+	WIN32_FIND_DATA fileStruct; //contains the file/directory currently under observation
+	HANDLE fileHandle;
 
 	while (errorCode != 1 && errorCode != 5)
 	{
-		directoryCheck(directoryInput);// NOT FINISHED
-
-		WIN32_FIND_DATA fileStruct; //contains the file/directory currently under observation
-		HANDLE fileHandle;
+		theEngine(searchTerm, fileStruct, fileHandle, directoryInput, true); //Directory check
 
 		errorCode = theEngine(searchTerm,fileStruct,fileHandle,directoryInput);
 		switch (errorCode)
@@ -66,8 +65,8 @@ int main()
 			break;
 		default:
 			bool directoryCheckResult = checkIfMoreDirectoriesAreLeftToSearch(); //NOT FINISHED
-			if (directoryCheckResult==false)
-				errorCode=5;
+			if (directoryCheckResult == false)
+				errorCode = 5;
 			else
 				modifySearchTermToSearchNextDirectory(); //NOT FINISHED
 			break;
@@ -78,37 +77,69 @@ int main()
 }
 
 
-void directoryCheck(const WIN32_FIND_DATA &fileStruct) //NOT FINISHED; NO DECLARATION ABOVE EITHER
+int addDirectoryToList(const std::string & directoryInput, WIN32_FIND_DATA &fileStruct, HANDLE & fileHandle) //NOT FINISHED; NO DECLARATION ABOVE EITHER
 {
-	if (fileStruct.dwFileAttributes==FILE_ATTRIBUTE_DIRECTORY)
-		std::cout << "The folder " << fileStruct.cFileName << " was found inside the search directory.\n"
+	/*Notes to Self:
+	This directory will add the full path of the folder to the vector as a string to be run as a fresh search
+	when it's time comes. However, a flag does not need to be made to signal the entry into a subdirectory;
+	everything is recursive and logic will signal itself. If that made any sense.
+	
+	Also, don't forget to exclude the dot folders from addition to the list.
+
+	Also, don't forget to make the function that retrieves the stored paths and sets them up for searching.
+	*/
+	std::cout << "The folder " << fileStruct.cFileName << " was found inside the search directory.\n"
 		<< "Would you like to search this folder as well? 1 for yes, 2 for no, 3 for search all found folders.";
 }
 
 
-int theEngine(const std::string searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const std::string &directoryInput)
+int theEngine(std::string searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const std::string &directoryInput, const bool directorySearchMode = false)
 {
 	unsigned short confirmDelete = 0;
 	int engineErrorCode = 0;
 
-	engineErrorCode = initialSearch(searchTerm, fileStruct, fileHandle);
+	if (directorySearchMode == true) //constructs new search string to use to find folders
+		searchTerm = directoryInput + "*";
+
+	engineErrorCode = initialSearch(searchTerm, fileStruct, fileHandle, directorySearchMode);
 	if (engineErrorCode != 0)
 		return engineErrorCode;
 
 	while (engineErrorCode==0) //iterates through the folder searching for search term.
 	{
-		engineErrorCode = fileDeletion(directoryInput, fileStruct, fileHandle, confirmDelete);
+		if (directorySearchMode == true)
+		{
+			engineErrorCode = addDirectoryToList();//not implemented yet, sorry --DON'T FOREGET TO EXCLUDE THE DOT FOLDERS!
+			if (engineErrorCode != 0)
+				break;
+		}
+		else
+		{
+			engineErrorCode = fileDeletion(directoryInput, fileStruct, confirmDelete);
+			if (engineErrorCode!=0)
+				break;
+		}
+		engineErrorCode = theNextFile(fileStruct,fileHandle);
 	}
 
 	return engineErrorCode;
 }
 
-int initialSearch(const std::string & searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle)
+int initialSearch(const std::string & searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const bool directorySearchMode = false)
 {
-	fileHandle = WIN32::FindFirstFile(searchTerm.c_str(), &fileStruct); //intial file search
+	if (directorySearchMode == true)
+		fileHandle = WIN32::FindFirstFileEx(searchTerm.c_str(), FindExInfoStandard, &fileStruct, FindExSearchLimitToDirectories, NULL, NULL); //intial directory search
+	else
+		fileHandle = WIN32::FindFirstFileEx(searchTerm.c_str(), FindExInfoStandard, &fileStruct, FindExSearchNameMatch, NULL, NULL); //intial file search
+
 	if (fileHandle == INVALID_HANDLE_VALUE)
 	{
-		if (WIN32::GetLastError()==ERROR_FILE_NOT_FOUND) //nothing matched the search mask
+		auto successCheck = WIN32::GetLastError();
+		TCHAR errorText [256];
+		WIN32::FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,NULL,successCheck,0,errorText,256,NULL);
+		std::cout << errorText;
+
+		if (successCheck==ERROR_FILE_NOT_FOUND) //nothing matched the search mask
 		{
 			return 3;
 		}
@@ -120,7 +151,7 @@ int initialSearch(const std::string & searchTerm, WIN32_FIND_DATA & fileStruct, 
 	return 0;
 }
 
-int fileDeletion (const std::string & directoryInput, WIN32_FIND_DATA & fileStruct, const HANDLE & fileHandle, unsigned short & confirmDelete)
+int fileDeletion (const std::string & directoryInput, WIN32_FIND_DATA & fileStruct, unsigned short & confirmDelete)
 {
 	if (confirmDelete!=3) //enables "yes to all" functionality to spare headaches
 	{
@@ -142,20 +173,27 @@ int fileDeletion (const std::string & directoryInput, WIN32_FIND_DATA & fileStru
 	else
 		std::cout << "File skipped." << std::endl;
 
-	return theNextFile (fileStruct, fileHandle);
+	return 0;
 }
 
-int theNextFile (WIN32_FIND_DATA & fileStruct, const HANDLE & fileHandle)
+int theNextFile (WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle)
 {
 	auto nextFile = WIN32::FindNextFile(fileHandle, &fileStruct); //gets next file to examine
 	if (nextFile==0)
 	{
-		if (WIN32::GetLastError()==ERROR_NO_MORE_FILES)
+		auto successCheck = WIN32::GetLastError();
+		TCHAR errorText [256];
+		WIN32::FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,NULL,successCheck,0,errorText,256,NULL);
+		std::cout << errorText;
+
+		if (successCheck==ERROR_NO_MORE_FILES)
 		{
+			WIN32::FindClose(fileHandle);
 			return 2;
 		}
 		else
 		{
+			WIN32::FindClose(fileHandle);
 			return 1;
 		}
 	}
