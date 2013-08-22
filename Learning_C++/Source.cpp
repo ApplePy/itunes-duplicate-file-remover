@@ -4,7 +4,7 @@
 #include <vector>
 
 //DECLARATIONS
-short theEngine(std::string searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const std::string &directoryInput, std::vector<std::string> &directoriesToSearch, const bool directorySearchMode);
+short theEngine(std::string searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const std::string &directoryInput, std::vector<std::string> &directoriesToSearch, unsigned short & confirmDelete, unsigned short &confirmAdd, const bool directorySearchMode);
 short initialSearch(const std::string & searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const bool directorySearchMode);
 short fileDeletion (const std::string & directoryInput, WIN32_FIND_DATA & fileStruct, unsigned short & confirmDelete);
 short addDirectoryToList(const std::string & directoryInput, WIN32_FIND_DATA &fileStruct, std::vector<std::string> &directoriesToSearch,unsigned short &confirmAdd);
@@ -59,12 +59,14 @@ short main()
 	short errorCode = 0;
 	WIN32_FIND_DATA fileStruct; //contains the file/directory currently under observation
 	HANDLE fileHandle;
+	unsigned short confirmDelete = 0;
+	unsigned short confirmAdd = 0;
 
 	while (errorCode != 1 && errorCode != 5)
 	{
-		theEngine(searchTerm, fileStruct, fileHandle, directoryInput, directoriesToSearch, true); //Directory check mode
+		theEngine(searchTerm, fileStruct, fileHandle, directoryInput, directoriesToSearch, confirmDelete, confirmAdd, true); //Directory check mode
 
-		errorCode = theEngine(searchTerm,fileStruct, fileHandle, directoryInput, directoriesToSearch, false);
+		errorCode = theEngine(searchTerm,fileStruct, fileHandle, directoryInput, directoriesToSearch, confirmDelete, confirmAdd, false);
 		switch (errorCode)
 		{
 		case (1):
@@ -84,10 +86,8 @@ short main()
 }
 
 
-short theEngine(std::string searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const std::string &directoryInput, std::vector<std::string> &directoriesToSearch, const bool directorySearchMode)
+short theEngine(std::string searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const std::string &directoryInput, std::vector<std::string> &directoriesToSearch, unsigned short & confirmDelete, unsigned short &confirmAdd, const bool directorySearchMode)
 {
-	unsigned short confirmDelete = 0;
-	unsigned short confirmAdd = 0;
 	short engineErrorCode = 0;
 
 	if (directorySearchMode == true) //constructs new search string to use to find folders
@@ -176,7 +176,7 @@ short theNextFile (WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const bool
 		do
 		{
 			nextFile = WIN32::FindNextFile(fileHandle, &fileStruct); //gets next file to examine
-			
+
 			if (nextFile==0)
 			{
 				auto successCheck = WIN32::GetLastError();
@@ -202,7 +202,7 @@ short theNextFile (WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const bool
 		do
 		{
 			nextFile = WIN32::FindNextFile(fileHandle, &fileStruct); //gets next file to examine
-			
+
 			if (nextFile==0)
 			{
 				auto successCheck = WIN32::GetLastError();
@@ -226,21 +226,21 @@ short theNextFile (WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const bool
 
 	/*if (nextFile==0)
 	{
-		auto successCheck = WIN32::GetLastError();
-		TCHAR errorText [256];
-		WIN32::FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,NULL,successCheck,0,errorText,256,NULL);
-		std::cout << errorText;
+	auto successCheck = WIN32::GetLastError();
+	TCHAR errorText [256];
+	WIN32::FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,NULL,successCheck,0,errorText,256,NULL);
+	std::cout << errorText;
 
-		if (successCheck==ERROR_NO_MORE_FILES)
-		{
-			WIN32::FindClose(fileHandle);
-			return 2;
-		}
-		else
-		{
-			WIN32::FindClose(fileHandle);
-			return 1;
-		}
+	if (successCheck==ERROR_NO_MORE_FILES)
+	{
+	WIN32::FindClose(fileHandle);
+	return 2;
+	}
+	else
+	{
+	WIN32::FindClose(fileHandle);
+	return 1;
+	}
 	}*/
 	return 0;
 }
