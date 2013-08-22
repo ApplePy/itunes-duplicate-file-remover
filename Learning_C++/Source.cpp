@@ -4,13 +4,15 @@
 #include <vector>
 
 //DECLARATIONS
-int theEngine(const std::string searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const std::string &directoryInput, const bool directorySearchMode = false);
-int initialSearch(const std::string & searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const bool directorySearchMode = false);
-int fileDeletion (const std::string & directoryInput, WIN32_FIND_DATA & fileStruct, unsigned short & confirmDelete);
-int theNextFile (WIN32_FIND_DATA & fileStruct, const HANDLE & fileHandle);
-int end_execution(int code);
+short theEngine(std::string searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const std::string &directoryInput, std::vector<std::string> &directoriesToSearch, const bool directorySearchMode);
+short initialSearch(const std::string & searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const bool directorySearchMode);
+short fileDeletion (const std::string & directoryInput, WIN32_FIND_DATA & fileStruct, unsigned short & confirmDelete);
+short addDirectoryToList(const std::string & directoryInput, WIN32_FIND_DATA &fileStruct, std::vector<std::string> &directoriesToSearch,unsigned short &confirmAdd);
+short theNextFile (WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const bool directorySearchMode);
+void modifySearch(std::vector<std::string> &directoriesToSearch, std::string &searchTerm, std::string &directoryInput, const std::string &maskInput);
+short end_execution(short code);
 
-int main()
+short main()
 {
 	std::string directoryInput; //Directory to search in
 	std::string maskInput; //Search mask
@@ -47,28 +49,33 @@ int main()
 	3: No files found matching search term in current directory
 	4: not used
 	5: All searches completed, no more subdirectories to check; everything completed successfully
+
+
+	NOTES TO SELF:
+	-------> Inputs are not validated yet!
 	*/
 
 	std::vector<std::string> directoriesToSearch;
-	int errorCode = 0;
+	short errorCode = 0;
 	WIN32_FIND_DATA fileStruct; //contains the file/directory currently under observation
 	HANDLE fileHandle;
 
 	while (errorCode != 1 && errorCode != 5)
 	{
-		theEngine(searchTerm, fileStruct, fileHandle, directoryInput, true); //Directory check
+		theEngine(searchTerm, fileStruct, fileHandle, directoryInput, directoriesToSearch, true); //Directory check mode
 
-		errorCode = theEngine(searchTerm,fileStruct,fileHandle,directoryInput);
+		errorCode = theEngine(searchTerm,fileStruct, fileHandle, directoryInput, directoriesToSearch, false);
 		switch (errorCode)
 		{
 		case (1):
 			break;
 		default:
-			bool directoryCheckResult = checkIfMoreDirectoriesAreLeftToSearch(); //NOT FINISHED
-			if (directoryCheckResult == false)
+			if (directoriesToSearch.size() == 0)
 				errorCode = 5;
 			else
-				modifySearchTermToSearchNextDirectory(); //NOT FINISHED
+			{
+				modifySearch(directoriesToSearch, searchTerm, directoryInput, maskInput);
+			}
 			break;
 		}
 	}
@@ -77,26 +84,11 @@ int main()
 }
 
 
-int addDirectoryToList(const std::string & directoryInput, WIN32_FIND_DATA &fileStruct, HANDLE & fileHandle) //NOT FINISHED; NO DECLARATION ABOVE EITHER
-{
-	/*Notes to Self:
-	This directory will add the full path of the folder to the vector as a string to be run as a fresh search
-	when it's time comes. However, a flag does not need to be made to signal the entry into a subdirectory;
-	everything is recursive and logic will signal itself. If that made any sense.
-	
-	Also, don't forget to exclude the dot folders from addition to the list.
-
-	Also, don't forget to make the function that retrieves the stored paths and sets them up for searching.
-	*/
-	std::cout << "The folder " << fileStruct.cFileName << " was found inside the search directory.\n"
-		<< "Would you like to search this folder as well? 1 for yes, 2 for no, 3 for search all found folders.";
-}
-
-
-int theEngine(std::string searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const std::string &directoryInput, const bool directorySearchMode = false)
+short theEngine(std::string searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const std::string &directoryInput, std::vector<std::string> &directoriesToSearch, const bool directorySearchMode)
 {
 	unsigned short confirmDelete = 0;
-	int engineErrorCode = 0;
+	unsigned short confirmAdd = 0;
+	short engineErrorCode = 0;
 
 	if (directorySearchMode == true) //constructs new search string to use to find folders
 		searchTerm = directoryInput + "*";
@@ -109,7 +101,7 @@ int theEngine(std::string searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fil
 	{
 		if (directorySearchMode == true)
 		{
-			engineErrorCode = addDirectoryToList();//not implemented yet, sorry --DON'T FOREGET TO EXCLUDE THE DOT FOLDERS!
+			engineErrorCode = addDirectoryToList(directoryInput, fileStruct, directoriesToSearch, confirmAdd);
 			if (engineErrorCode != 0)
 				break;
 		}
@@ -119,18 +111,18 @@ int theEngine(std::string searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fil
 			if (engineErrorCode!=0)
 				break;
 		}
-		engineErrorCode = theNextFile(fileStruct,fileHandle);
+		engineErrorCode = theNextFile(fileStruct,fileHandle, directorySearchMode);
 	}
 
 	return engineErrorCode;
 }
 
-int initialSearch(const std::string & searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const bool directorySearchMode = false)
+short initialSearch(const std::string & searchTerm, WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const bool directorySearchMode)
 {
-	if (directorySearchMode == true)
-		fileHandle = WIN32::FindFirstFileEx(searchTerm.c_str(), FindExInfoStandard, &fileStruct, FindExSearchLimitToDirectories, NULL, NULL); //intial directory search
-	else
-		fileHandle = WIN32::FindFirstFileEx(searchTerm.c_str(), FindExInfoStandard, &fileStruct, FindExSearchNameMatch, NULL, NULL); //intial file search
+	//if (directorySearchMode == true)
+	//	fileHandle = WIN32::FindFirstFileEx(searchTerm.c_str(), FindExInfoStandard, &fileStruct, FindExSearchLimitToDirectories, NULL, NULL); //BROKEN.
+	//else
+	fileHandle = WIN32::FindFirstFileEx(searchTerm.c_str(), FindExInfoStandard, &fileStruct, FindExSearchNameMatch, NULL, NULL); //intial file search
 
 	if (fileHandle == INVALID_HANDLE_VALUE)
 	{
@@ -151,7 +143,7 @@ int initialSearch(const std::string & searchTerm, WIN32_FIND_DATA & fileStruct, 
 	return 0;
 }
 
-int fileDeletion (const std::string & directoryInput, WIN32_FIND_DATA & fileStruct, unsigned short & confirmDelete)
+short fileDeletion (const std::string & directoryInput, WIN32_FIND_DATA & fileStruct, unsigned short & confirmDelete)
 {
 	if (confirmDelete!=3) //enables "yes to all" functionality to spare headaches
 	{
@@ -176,10 +168,63 @@ int fileDeletion (const std::string & directoryInput, WIN32_FIND_DATA & fileStru
 	return 0;
 }
 
-int theNextFile (WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle)
+short theNextFile (WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle, const bool directorySearchMode)
 {
-	auto nextFile = WIN32::FindNextFile(fileHandle, &fileStruct); //gets next file to examine
-	if (nextFile==0)
+	int nextFile = 0;
+	if (directorySearchMode==true)
+	{
+		do
+		{
+			nextFile = WIN32::FindNextFile(fileHandle, &fileStruct); //gets next file to examine
+			
+			if (nextFile==0)
+			{
+				auto successCheck = WIN32::GetLastError();
+				TCHAR errorText [256];
+				WIN32::FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,NULL,successCheck,0,errorText,256,NULL);
+				std::cout << errorText;
+
+				if (successCheck==ERROR_NO_MORE_FILES)
+				{
+					WIN32::FindClose(fileHandle);
+					return 2;
+				}
+				else
+				{
+					WIN32::FindClose(fileHandle);
+					return 1;
+				}
+			}
+		} while (fileStruct.dwFileAttributes != FILE_ATTRIBUTE_DIRECTORY);
+	}
+	else
+	{
+		do
+		{
+			nextFile = WIN32::FindNextFile(fileHandle, &fileStruct); //gets next file to examine
+			
+			if (nextFile==0)
+			{
+				auto successCheck = WIN32::GetLastError();
+				TCHAR errorText [256];
+				WIN32::FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,NULL,successCheck,0,errorText,256,NULL);
+				std::cout << errorText;
+
+				if (successCheck==ERROR_NO_MORE_FILES)
+				{
+					WIN32::FindClose(fileHandle);
+					return 2;
+				}
+				else
+				{
+					WIN32::FindClose(fileHandle);
+					return 1;
+				}
+			}
+		} while (fileStruct.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY);
+	}
+
+	/*if (nextFile==0)
 	{
 		auto successCheck = WIN32::GetLastError();
 		TCHAR errorText [256];
@@ -196,11 +241,48 @@ int theNextFile (WIN32_FIND_DATA & fileStruct, HANDLE & fileHandle)
 			WIN32::FindClose(fileHandle);
 			return 1;
 		}
+	}*/
+	return 0;
+}
+
+short addDirectoryToList(const std::string & directoryInput, WIN32_FIND_DATA &fileStruct, std::vector<std::string> &directoriesToSearch, unsigned short &confirmAdd)
+{
+	/*Notes to Self:
+	This function will add the full path of the new folder to the vector as a string to be run as a fresh search
+	when it's time comes. However, a flag does not need to be made to signal the entry into a subdirectory;
+	everything is recursive and logic will signal itself. If that made any sense.
+
+	Also, don't forget to exclude the dot folders from addition to the list.
+	*/
+
+	auto compareResult1 = strcmp (fileStruct.cFileName, ".");
+	auto compareResult2 = strcmp (fileStruct.cFileName, "..");
+
+	if (compareResult1 != 0 && compareResult2 != 0)
+	{
+		if (confirmAdd != 3)
+		{
+			std::cout << "The folder " << directoryInput.c_str() << fileStruct.cFileName << " was found inside the search directory.\n"
+				<< "Would you like to search this folder as well? 1 for yes, 2 for no, 3 for search all found folders. Answer: ";
+			std::cin >> confirmAdd;
+		}
+		if (confirmAdd != 2)
+		{
+			std::string NameArrange = directoryInput + fileStruct.cFileName;
+			directoriesToSearch.push_back(NameArrange);
+		}
 	}
 	return 0;
 }
 
-int end_execution(int code) //Handles the translation between error code and corresponding text
+void modifySearch(std::vector<std::string> &directoriesToSearch, std::string &searchTerm, std::string &directoryInput, const std::string &maskInput)
+{
+	directoryInput = directoriesToSearch[directoriesToSearch.size() - 1] + "\\";
+	searchTerm = directoryInput + maskInput;
+	directoriesToSearch.pop_back();
+}
+
+short end_execution(short code) //Handles the translation between error code and corresponding text
 {
 	switch(code)
 	{
