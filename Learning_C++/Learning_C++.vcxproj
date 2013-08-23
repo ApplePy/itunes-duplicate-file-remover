@@ -65,6 +65,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Source.cpp" />
+    <ClCompile Include="userpref.cpp" />
+    <ClCompile Include="WIN32Files.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="userpref.h" />
+    <ClInclude Include="WIN32Files.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
