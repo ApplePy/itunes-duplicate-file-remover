@@ -7,20 +7,29 @@ WIN32Files::WIN32Files(void):fileHandle(fileHandleInternal), fileInfo(fileInfoIn
 
 WIN32Files::~WIN32Files(void)
 {
-	if (WIN32::FindClose(fileHandleInternal) == 0)
+	if (isValid == true)
 	{
-		std::cout << "An error has occurred in closing this file search. The error was as follows: ";
+		if (WIN32::FindClose(fileHandleInternal) == 0)
+		{
+			std::cout << "An error has occurred in closing this file search. The error was as follows: ";
 
-		auto successCheck = WIN32::GetLastError();
-		TCHAR errorText [256];
-		WIN32::FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,NULL,successCheck,0,errorText,256,NULL);
-		std::cout << errorText;
-		system("pause");
+			auto successCheck = WIN32::GetLastError();
+			TCHAR errorText [256];
+			WIN32::FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,NULL,successCheck,0,errorText,256,NULL);
+			std::cout << errorText;
+			system("pause");
+		}
 	}
 }
 
 ulong WIN32Files::initialSearch(const std::string & searchTerm)
 {
+	if (fileHandleInternal != INVALID_HANDLE_VALUE) //To clear up any residue in the class before initiating a new search
+	{
+		closeFile();
+		isValid = false;
+	}
+
 	fileHandleInternal = WIN32::FindFirstFile(searchTerm.c_str(), &fileInfoInternal);
 
 	if (fileHandleInternal == INVALID_HANDLE_VALUE)
@@ -35,18 +44,25 @@ ulong WIN32Files::initialSearch(const std::string & searchTerm)
 
 ulong WIN32Files::continueSearch()
 {
+	char lastFile[260];
+	strcpy_s(lastFile, 260, fileInfoInternal.cFileName);
+
 	WIN32::FindNextFile(fileHandleInternal, &fileInfoInternal);
 
-	auto moreFiles = WIN32::GetLastError();
+	char thisFile[260];
+	strcpy_s(thisFile, 260, fileInfoInternal.cFileName);
 
 	if (fileHandleInternal == 0)
 	{
 		isValid = false;
-		return moreFiles;
+		return WIN32::GetLastError();
 	}
 
 	isValid = true;
-	return moreFiles;
+	if (strcmp(lastFile, thisFile) == 0)
+		return ERROR_NO_MORE_FILES;
+	else
+		return 0;
 }
 
 std::string WIN32Files::errorMsg(ulong errorCode, bool outputToConsole = true)
@@ -69,7 +85,7 @@ ushort WIN32Files::deleteFile(const std::string &directoryInput, ushort &confirm
 {
 	if (confirmDelete!=3) //enables "yes to all" functionality to spare headaches
 	{
-		std::cout << "Are you sure you want to delete " << fileInfoInternal.cFileName << "? Press 1 if no, 2 if yes, 3 if yes to all." << std::endl; //output file name to be deleted
+		std::cout << "Are you sure you want to delete " << fileInfoInternal.cFileName << "? Press 1 if no, 2 if yes, 3 if yes to all.\r\n Answer: "; //output file name to be deleted
 		std::cin>>confirmDelete;
 
 		while (confirmDelete < 1 || confirmDelete > 3)
@@ -90,7 +106,7 @@ ushort WIN32Files::deleteFile(const std::string &directoryInput, ushort &confirm
 			std::cout << "Error deleting file." << std::endl;
 			return 1;
 		}
-		isValid = false;
+		//isValid = false;
 	}
 	else
 		std::cout << "File skipped." << std::endl;

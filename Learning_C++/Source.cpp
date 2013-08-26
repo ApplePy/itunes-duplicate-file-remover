@@ -20,16 +20,16 @@ typedef unsigned long ulong;
 
 ulong main()
 {
-	std::string directTemp = "C:\\Users\\darry_000\\Desktop\\Test Folder"; //temp value for testing
-	std::string maskTemp ="* - Copy.txt"; //temp value for testing
+	std::string directTemp;
+	std::string maskTemp;
 	//std::string searchTerm; //Concatenation of directoryInput and maskInput to feed to the Windows search API
 
 	//Uncomment for non-testing
-	//std::cout << "Enter the search path: ";
-	//std::getline(std::cin,directTemp);
+	std::cout << "Enter the search path: ";
+	std::getline(std::cin,directTemp);
 
-	//std::cout << "Enter the search mask: ";
-	//std::getline(std::cin,maskTemp);
+	std::cout << "Enter the search mask: ";
+	std::getline(std::cin,maskTemp);
 
 	userpref searchParams (directTemp, maskTemp);
 	directTemp.clear();
@@ -127,12 +127,12 @@ ulong theEngine(userpref &searchParams, WIN32Files &activeFile, const bool direc
 {
 	ulong engineErrorCode = 0;
 
-	if (activeFile.fileHandle != INVALID_HANDLE_VALUE) //Clears any residue in the class
-	{
-		auto engineErrorCode = activeFile.closeFile();
-		if (engineErrorCode != 0)
-			return engineErrorCode;
-	}
+	//if (activeFile.fileHandle != INVALID_HANDLE_VALUE) //Clears any residue in the class
+	//{
+	//	auto engineErrorCode = activeFile.closeFile();
+	//	if (engineErrorCode != 0)
+	//		return engineErrorCode;
+	//}
 
 	if (directorySearchMode == true) //constructs new search string to use to find folders
 	{
