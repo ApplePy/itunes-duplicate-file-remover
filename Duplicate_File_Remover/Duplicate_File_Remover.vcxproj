@@ -10,9 +10,18 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="userpref.h" />
+    <ClInclude Include="WIN32Files.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source.cpp" />
+    <ClCompile Include="userpref.cpp" />
+    <ClCompile Include="WIN32Files.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{1BB526C0-6DBD-4F98-9D01-D42B1BABF6D6}</ProjectGuid>
-    <RootNamespace>Learning_C</RootNamespace>
+    <ProjectGuid>{83BBB099-3497-4E1A-980D-8721314D366A}</ProjectGuid>
+    <RootNamespace>Duplicate_File_Remover</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -63,15 +72,6 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="Source.cpp" />
-    <ClCompile Include="userpref.cpp" />
-    <ClCompile Include="WIN32Files.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="userpref.h" />
-    <ClInclude Include="WIN32Files.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
