@@ -18,9 +18,9 @@ public:
 	ushort setSearchTerm(initialReset resetToInital);
 	void setSearchTerm(std::string input);
 
-	const std::string &directoryInput;
-	const std::string &maskInput;
-	const std::string &searchTerm;
+	const std::string &directoryInput; //public-facing uneditable versions of class variables
+	const std::string &maskInput; //public-facing uneditable versions of class variables
+	const std::string &searchTerm; //public-facing uneditable versions of class variables
 	ushort confirmDelete;
 	ushort confirmAdd;
 

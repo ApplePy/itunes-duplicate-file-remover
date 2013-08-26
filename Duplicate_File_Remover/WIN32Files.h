@@ -19,9 +19,9 @@ public:
 	std::string errorMsg(ulong errorCode, bool outputToConsole);
 	ulong closeFile();
 	
-	const HANDLE &fileHandle;
-	const WIN32_FIND_DATA &fileInfo;
-	const bool &fileIsValid;
+	const HANDLE &fileHandle; //public-facing uneditable versions of class variables
+	const WIN32_FIND_DATA &fileInfo; //public-facing uneditable versions of class variables
+	const bool &fileIsValid; //public-facing uneditable versions of class variables
 	std::vector<std::string> listToSearch;
 
 protected:

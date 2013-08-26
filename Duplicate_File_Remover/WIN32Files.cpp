@@ -7,7 +7,7 @@ WIN32Files::WIN32Files(void):fileHandle(fileHandleInternal), fileInfo(fileInfoIn
 
 WIN32Files::~WIN32Files(void)
 {
-	if (isValid == true)
+	if (isValid == true) //If the handle was still open and valid when the class was called to be destroyed
 	{
 		if (WIN32::FindClose(fileHandleInternal) == 0)
 		{

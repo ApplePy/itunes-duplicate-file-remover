@@ -3,13 +3,13 @@
 
 userpref::userpref(std::string initializingDirectoryInput, std::string initializingMaskInput):directoryInput(internalDirectoryInput), maskInput(internalMaskInput), searchTerm(internalSearchTerm), internalMaskInput (initializingMaskInput), initialMaskInput (initializingMaskInput)
 {
-	if (initializingDirectoryInput.back() != '\\')
+	if (initializingDirectoryInput.back() != '\\') //If the user forgot to end the directory path with a slash, add it in
 		initializingDirectoryInput.append("\\");
 
 	internalDirectoryInput = initializingDirectoryInput;
 	initialDirectoryInput = internalDirectoryInput;
 
-	setSearchTerm();
+	setSearchTerm(); //concatenates the directory and mask to make the search term
 	initialSearchTerm = internalSearchTerm;
 
 	confirmAdd = 0;
