@@ -24,7 +24,7 @@ int main ()
 	libraryTracks->get_Count(&libraryTracksLength);
 	IITTrack* track;
 	ITTrackKind trackType;
-	for (long iterator=1; iterator <= libraryTracksLength; ++iterator)
+	for (long iterator=10; iterator <= libraryTracksLength; ++iterator)
 	{
 		hRes = libraryTracks->get_Item(iterator, &track);
 		if (hRes != S_OK)
@@ -34,18 +34,23 @@ int main ()
 			break;
 		if (trackType == ITTrackKindFile)
 		{
-			IITFileOrCDTrack* trackCast = dynamic_cast<IITFileOrCDTrack*> (track); //something is wrong here
-			BSTR trackTitle = SysAllocString(L"");
-			hRes = track->get_Artist(&trackTitle); //does not work when switched to IITFileOrCDTrack-only functions
+			BSTR trackLocation = SysAllocString(L"");
+			IITFileOrCDTrack *fileTrack = NULL;
+			track->QueryInterface(IID_IITFileOrCDTrack, (void**)&fileTrack); //how to convert a IITTrack into a IITFileOrCDTrack
+			if (fileTrack != NULL)
+			{
+				fileTrack->get_Location(&trackLocation);
+				fileTrack->Release(); //
+			}
 			if (hRes != S_OK)
 				break;
-			std::cout << ConvertBSTRToMBS(trackTitle);
-			::SysFreeString(trackTitle);
+			std::cout << ConvertBSTRToMBS(trackLocation) << std::endl;
+			::SysFreeString(trackLocation);
 		}
 		else
 			continue;		
 	}
-	
+
 	CoUninitialize();
 	system("pause");
 	return 0;
