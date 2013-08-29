@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="file_manipulation.h" />
     <ClInclude Include="userpref.h" />
     <ClInclude Include="WIN32Files.h" />
   </ItemGroup>

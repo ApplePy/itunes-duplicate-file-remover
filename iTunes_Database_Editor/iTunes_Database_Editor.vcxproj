@@ -64,6 +64,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="file_manipulation.h" />
     <ClInclude Include="iTunesCOMInterface.h" />
   </ItemGroup>
   <ItemGroup>

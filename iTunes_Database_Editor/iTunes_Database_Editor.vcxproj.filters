@@ -26,5 +26,8 @@
     <ClInclude Include="iTunesCOMInterface.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
+    <ClInclude Include="file_manipulation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

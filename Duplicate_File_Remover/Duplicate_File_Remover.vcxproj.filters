@@ -21,6 +21,9 @@
     <ClInclude Include="WIN32Files.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="file_manipulation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source.cpp">

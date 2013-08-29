@@ -85,12 +85,13 @@ ushort WIN32Files::deleteFile(const std::string &directoryInput, ushort &confirm
 {
 	if (confirmDelete!=3) //enables "yes to all" functionality to spare headaches
 	{
-		std::cout << "Are you sure you want to delete " << fileInfoInternal.cFileName << "? Press 1 if no, 2 if yes, 3 if yes to all.\r\n Answer: "; //output file name to be deleted
+		std::cout << "Are you sure you want to delete " << fileInfoInternal.cFileName << "? Press 1 if no, 2 if yes, 3 if yes to all (Warning: \"Yes to all\" may cause undesired behaviour).\r\n Answer: "; //output file name to be deleted
 		std::cin>>confirmDelete;
 
 		while (confirmDelete < 1 || confirmDelete > 3)
 		{
-			std::cout << std::endl << "Invalid option! Press 1 for no, 2 for yes, 3 for search all found folders.\r\n Answer: ";
+			std::cout << std::endl << "Invalid option!" <<
+				std::endl << "Are you sure you want to delete " << fileInfoInternal.cFileName << "? Press 1 if no, 2 if yes, 3 if yes to all (Warning: \"Yes to all\" may cause undesired behaviour).\r\n Answer: ";
 			std::cin >> confirmDelete;
 		}
 	}
@@ -109,7 +110,10 @@ ushort WIN32Files::deleteFile(const std::string &directoryInput, ushort &confirm
 		//isValid = false;
 	}
 	else
+	{
 		std::cout << "File skipped." << std::endl;
+		return 2;
+	}
 
 	return 0;
 }
