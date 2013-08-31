@@ -65,7 +65,7 @@ int main ()
 	mainLibrary->get_Tracks(&libraryTracks);
 	long libraryTracksLength;
 	libraryTracks->get_Count(&libraryTracksLength);
-	
+
 	int lines = 0;
 	if (searchType == file)
 	{
@@ -113,21 +113,68 @@ int main ()
 							unsigned int pos=0;
 							pos = CStringVersionName.rfind(" 1", std::string::npos);
 							std::string newName = CStringVersionName.substr(0, pos);
+							/*std::cout << "Old Name: " << CStringVersionName.c_str() << std::endl << 
+								" New Name: " << newName.c_str() <<std::endl;
+							system("pause");
+							std::cout << std::endl;*/
 							fileTrack->put_Name(ConvertMBSToBSTR(newName));
 
-							//edit database file location
-							unsigned int extensionPos=0;
-							extensionPos = CStringVersionLocation.rfind(".", std::string::npos);
-							pos = CStringVersionLocation.rfind(" 1.", std::string::npos);
-							std::string newLocation = CStringVersionLocation.substr(0, pos);
-							newLocation = newLocation + CStringVersionLocation.substr(extensionPos, std::string::npos);
-							fileTrack->put_Location(ConvertMBSToBSTR(newLocation));
+							ITVideoKind isVideo;
+							fileTrack->get_VideoKind(&isVideo);
+
+							if (isVideo == ITVideoKindNone || isVideo == ITVideoKindMusicVideo)
+							{
+								//edit database file location FOR MUSIC
+								unsigned int extensionPos=0;
+								extensionPos = CStringVersionLocation.rfind(".", std::string::npos);
+								pos = CStringVersionLocation.rfind(" 1.", std::string::npos);
+								std::string newLocation = CStringVersionLocation.substr(0, pos);
+								newLocation = newLocation + CStringVersionLocation.substr(extensionPos, std::string::npos);
+								/*std::cout << "Old Location: " << CStringVersionLocation.c_str() << std::endl << 
+								" New Name: " << newLocation.c_str() <<std::endl;
+							system("pause");
+							std::cout << std::endl;*/
+								fileTrack->put_Location(ConvertMBSToBSTR(newLocation));
+							}
+							else if (isVideo ==ITVideoKindMovie)
+							{
+								//edit database file location FOR MOVIE
+								unsigned int extensionPos=0;
+								unsigned int pathSlashLast = 0;
+								int signedPos = 0;
+								extensionPos = CStringVersionLocation.rfind(".", std::string::npos);
+								pathSlashLast = CStringVersionLocation.rfind("\\", std::string::npos);
+
+								signedPos = CStringVersionLocation.rfind(" 1", pathSlashLast);
+								std::string newLocation;
+								if (signedPos == -1)
+								{
+									newLocation = CStringVersionLocation.substr(0, pathSlashLast);
+								}
+								else
+								{
+								newLocation = CStringVersionLocation.substr(0, signedPos);
+								}
+								pos = CStringVersionLocation.rfind(" 1.", std::string::npos);
+								newLocation = newLocation + CStringVersionLocation.substr(pathSlashLast, (pos-pathSlashLast));
+								newLocation = newLocation + CStringVersionLocation.substr(extensionPos, std::string::npos);
+								/*std::cout << "Old Location: " << CStringVersionLocation.c_str() << std::endl << 
+								" New Name: " << newLocation.c_str() <<std::endl;
+							system("pause");
+							std::cout << std::endl;*/
+								fileTrack->put_Location(ConvertMBSToBSTR(newLocation));
+							}
+							else
+							{
+								std::cout << CStringVersionName <<
+									" isn't a music video, a song, or a movie... I'm not quite sure how to handle this." <<std::endl;
+							}
 							break;
 						}
 						else if (CStringVersionLocation == "")
 						{
 							std::cout << CStringVersionName << " has no location. Check this out." << std::endl;
-							//system("pause");
+							system("pause");
 							break;
 						}
 					}
